@@ -1,4 +1,4 @@
-# Universe of Goo - Milestone I
+# Universe of Goo
 
 A 2D mass-spring physics simulation inspired by World of Goo, built with C++, Eigen, and Polyscope.
 
@@ -63,3 +63,4 @@ deps/
 cmake/
   libigl.cmake      - libigl/Eigen dependency fetching
 ```
+
