@@ -1,66 +1,69 @@
 # Universe of Goo
 
-A 2D mass-spring physics simulation inspired by World of Goo, built with C++, Eigen, and Polyscope.
+Physics simulation milestones for a computer graphics course, inspired by
+*World of Goo*. Each milestone is a self-contained C++ / Eigen / Polyscope
+project with its own build, tests, and write-up.
 
-## Features
-
-- **Particle system** with mass, position, velocity, and fixed/free DOFs
-- **Spring connectors** with automatic creation based on proximity, Hookean force model (stiffness = k_b / rest length), and Cauchy strain-based snapping
-- **Force computation** including gravity, spring forces, viscous damping, and floor penalty forces, with analytic force Jacobian (Hessian) for implicit solvers
-- **Four numerical integrators**: Explicit Euler, Velocity Verlet, Implicit Euler (Newton's method), and Implicit Midpoint (Newton's method)
-- **Saw tool** for cutting springs and deleting particles, with proper index remapping
-- **Interactive GUI** via Polyscope with click-to-add particles, saw placement, and real-time parameter tuning
-
-## Build
+## Layout
 
 ```
-mkdir build
-cd build
-cmake ..
-make -j4
+universe-of-goo/
+├── milestone1/        # Mass-spring simulation
+│   ├── CMakeLists.txt
+│   ├── README.md      # Full feature list, build + run + test instructions
+│   ├── cmake/
+│   ├── deps/polyscope/
+│   ├── src/           # main.cpp, SimParameters.h, SceneObjects.h
+│   ├── tests/         # 73 unit tests, 2229 assertions
+│   └── goo1.pdf       # Spec
+└── milestone2/        # Rigid + flexible rods, constraint methods
+    ├── CMakeLists.txt
+    ├── README.md      # Full feature list, build + run + test instructions
+    ├── cmake/
+    ├── deps/polyscope/
+    ├── src/           # main.cpp
+    └── tests/         # Non-GUI constraint tests
 ```
 
-For Release mode (compiler optimizations):
-```
+## Milestone I — Mass-Spring Simulation
+
+2D particles connected by Hookean springs, with gravity, viscous damping,
+and a floor. Four integrators (Explicit Euler, Velocity Verlet, Implicit
+Euler, Implicit Midpoint), analytic force Jacobians for the implicit solvers,
+Cauchy-strain spring snapping, and a saw tool that cuts springs and removes
+particles with correct index remapping.
+
+73 unit tests cover geometry, mass matrix, gravity, spring force + Hessian
+(finite-difference verified), damping, floor penalty, all four integrators,
+fixed particles, snapping, saw collisions, and energy conservation.
+
+See [`milestone1/README.md`](milestone1/README.md) for build and run
+instructions.
+
+## Milestone II — Rigid and Flexible Rods
+
+Adds rigid-rod connectors implemented three different ways:
+
+- **Penalty method** — rod constraint potential + force added to the system
+- **Step-and-project** — unconstrained step followed by Newton solve over
+  `(q, lambda)` that projects back onto the constraint manifold
+- **Lagrange multipliers** — Newton solve on `lambda` each step
+
+Flexible rods are modeled by splitting the rod into inert internal particles
+plus unsnappable springs, with bending hinges between consecutive segments.
+Spring parameters scale with rest length (`ks/L`, mass `rho*L`); hinge
+stiffness is `2*kb/(L1+L2)`. Elastic bending force is toggleable.
+
+See [`milestone2/README.md`](milestone2/README.md) for build and run
+instructions, along with the full feature checklist.
+
+## Build (either milestone)
+
+```bash
+cd milestone1   # or milestone2
+mkdir -p build && cd build
 cmake -DCMAKE_BUILD_TYPE=Release ..
+make -j4
+./bin/goo1                # or ./bin/goo2
+./bin/goo1_tests          # or ./bin/goo2 --run-tests
 ```
-
-## Run
-
-```
-./build/bin/goo1
-```
-
-**Controls:**
-- Left-click to add particles (springs auto-connect to nearby particles)
-- Switch to saw mode in the GUI to place saws that cut springs/particles
-- Toggle gravity, springs, damping, floor in the sidebar
-- Switch integrators and adjust time step, stiffness, etc. in real time
-
-## Tests
-
-73 unit tests covering all physics functions (2229 assertions):
-
-```
-cd build
-cmake --build . --target goo1_tests
-./bin/goo1_tests
-```
-
-Test categories: geometry helpers, particle/spring creation, configuration vectors, mass matrix, gravity, spring forces (including finite-difference verification of force and Hessian), damping, floor penalty, all four integrators, fixed particles, spring snapping, saw collision with index remapping, out-of-bounds deletion, energy conservation, and integrator stability.
-
-## Project Structure
-
-```
-src/
-  main.cpp          - All simulation logic and Polyscope GUI
-  SimParameters.h   - Simulation parameters (time step, stiffness, etc.)
-  SceneObjects.h    - Particle, Spring, Saw, Connector data structures
-tests/
-  test_main.cpp     - 73 unit tests with custom minimal test framework
-deps/
-  polyscope/        - Polyscope visualization library
-cmake/
-  libigl.cmake      - libigl/Eigen dependency fetching
-```
-
